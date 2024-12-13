@@ -1,7 +1,11 @@
 from unittest import mock
+
+import pytest
 from mock_alchemy.mocking import UnifiedAlchemyMagicMock
 from sqlalchemy.exc import NoResultFound
+
 from src.models.sqlite.entities.pets import PetsTable
+
 from .pets_repository import PetsRepository
 
 
@@ -24,6 +28,7 @@ class MockConnection:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
+
 
 class MockConnectionNoResult:
     def __init__(self):
@@ -50,6 +55,7 @@ def test_list_pets():
 
     assert response[0].name == "dog"
 
+
 def test_delete_pet():
     mock_connection = MockConnection()
     repo = PetsRepository(mock_connection)
@@ -59,3 +65,24 @@ def test_delete_pet():
     mock_connection.session.query.assert_called_once_with(PetsTable)
     mock_connection.session.filter.assert_called_once_with(PetsTable.name == "petName")
     mock_connection.session.delete.assert_called_once()
+
+
+def test_list_pets_no_result():
+    mock_connection = MockConnectionNoResult()
+    repo = PetsRepository(mock_connection)
+    response = repo.list_pets()
+
+    mock_connection.session.query.assert_called_once_with(PetsTable)
+    mock_connection.session.all.assert_not_called()
+
+    assert response == []
+
+
+def test_delete_pet_error():
+    mock_connection = MockConnectionNoResult()
+    repo = PetsRepository(mock_connection)
+
+    with pytest.raises(Exception):
+        repo.delete_pets("petName")
+
+    mock_connection.session.rollback.assert_called_once()
