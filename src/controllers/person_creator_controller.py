@@ -51,3 +51,7 @@ class PersonCreatorController(PersonCreatorControllerInterface):
                     "attributes": person_info
                 }
             }
+        
+if __name__ == '__main__':
+    person = PersonCreatorController()
+    person.create({'first_name': 'John', 'last_name': 'Doe', 'age': 30, 'pet_id': 1})
